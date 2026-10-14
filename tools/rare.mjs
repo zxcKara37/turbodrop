@@ -1,0 +1,12 @@
+import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
+const out = process.argv[2], W=+(process.argv[3]||1280), H=+(process.argv[4]||860), tag=process.argv[5]||'pc';
+const b = await chromium.launch(); const p = await b.newPage({viewport:{width:W,height:H}}); const errs=[];
+p.on('pageerror', e => errs.push('PAGEERROR: '+e.message));
+await p.goto('file://'+process.cwd()+'/dist/test.html'); await p.waitForTimeout(800);
+await p.evaluate(()=>{ S.bal=1e6; S.xp=xpFor(20); S.lvl=20; const orig=rollCase; window.__force=1; rollCase=function(cs){ if(window.__force){ window.__force=0; return {e:cs.items[0],ticket:7} } return orig(cs) }; openCaseView(CASE_BY.relic) });
+await p.waitForTimeout(500); await p.click('#openBtn'); await p.waitForTimeout(7600); await p.screenshot({path:`${out}/${tag}-rare.png`});
+await p.evaluate(()=>closeReveal()); await p.evaluate(()=>{ const i=S.inv[0]; i.t=true; i.kills=1234; openItem(i) }); await p.waitForTimeout(600);
+await p.click('#mbox .inspect + * button, #mbox .ghost.sm'); await p.waitForTimeout(1100); await p.screenshot({path:`${out}/${tag}-spin360.png`});
+await p.waitForTimeout(800); await p.screenshot({path:`${out}/${tag}-spin360b.png`});
+await p.waitForTimeout(2600); await p.mouse.move(W*.3, H*.25); await p.waitForTimeout(300); await p.screenshot({path:`${out}/${tag}-tilt.png`});
+console.log(errs.join('\n')||'OK'); await b.close();

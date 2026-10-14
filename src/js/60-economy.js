@@ -36,9 +36,9 @@ const EV_ITEM = it => it.base * E_WEAR * (it.canTurbo ? (1 - TURBO_P) + TURBO_P 
 
 /* ---------- Рынок: плавные колебания цен, среднее = 1 ---------- */
 function market(key, t = Date.now()) {
-  const h = hseed(key), p1 = 3 + (h % 7), p2 = 40 + (h >>> 4) % 50, p3 = 9 + (h >>> 9) % 6;
+  const h = hseed(key), p1 = 3 + (h % 7), p2 = 40 + (h >>> 4) % 50, p3 = 20 + (h >>> 9) % 15;
   const ph1 = (h % 628) / 100, ph2 = ((h >>> 3) % 628) / 100, ph3 = ((h >>> 7) % 628) / 100, T = t / 6e4;
-  return 1 + .075 * Math.sin(T / (p1 * 60) * 6.283 + ph1) + .035 * Math.sin(T / p2 * 6.283 + ph2) + .01 * Math.sin(T / p3 * 6.283 + ph3);
+  return 1 + .075 * Math.sin(T / (p1 * 60) * 6.283 + ph1) + .035 * Math.sin(T / p2 * 6.283 + ph2) + .008 * Math.sin(T / p3 * 6.283 + ph3);
 }
 // Цена экземпляра: база вида × скин × износ × TURBO × рынок
 function priceOf(inst, t) {

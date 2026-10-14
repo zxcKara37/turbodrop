@@ -1732,9 +1732,9 @@ const EV_ITEM = it => it.base * E_WEAR * (it.canTurbo ? (1 - TURBO_P) + TURBO_P 
 
 /* ---------- Рынок: плавные колебания цен, среднее = 1 ---------- */
 function market(key, t = Date.now()) {
-  const h = hseed(key), p1 = 3 + (h % 7), p2 = 40 + (h >>> 4) % 50, p3 = 9 + (h >>> 9) % 6;
+  const h = hseed(key), p1 = 3 + (h % 7), p2 = 40 + (h >>> 4) % 50, p3 = 20 + (h >>> 9) % 15;
   const ph1 = (h % 628) / 100, ph2 = ((h >>> 3) % 628) / 100, ph3 = ((h >>> 7) % 628) / 100, T = t / 6e4;
-  return 1 + .075 * Math.sin(T / (p1 * 60) * 6.283 + ph1) + .035 * Math.sin(T / p2 * 6.283 + ph2) + .01 * Math.sin(T / p3 * 6.283 + ph3);
+  return 1 + .075 * Math.sin(T / (p1 * 60) * 6.283 + ph1) + .035 * Math.sin(T / p2 * 6.283 + ph2) + .008 * Math.sin(T / p3 * 6.283 + ph3);
 }
 // Цена экземпляра: база вида × скин × износ × TURBO × рынок
 function priceOf(inst, t) {
@@ -3142,13 +3142,13 @@ function inspectView(spec, o = {}) {
   const wrap = el("div", "inspect"); wrap.style.setProperty("--rc", o.rc || "var(--accent)");
   wrap.append(el("div", "glow"));
   const g3 = el("div", "gun3d"); wrap.append(g3);
-  const url = gunURL(spec, "lg");
+  const url = gunURL(Object.assign({}, spec, { turbo: false }), "lg"); // табличка TURBO в осмотре — живой счётчик поверх
   // толщина: несколько затемнённых слоёв по глубине, лицевая и обратная (зеркальная) стороны
   for (let z = -3; z <= 3; z++) { const l = el("div", "lay edge"); l.style.transform = `translateZ(${z * 1.2}px)`; l.innerHTML = `<img alt="" src="${url}">`; g3.append(l) }
   const front = el("div", "lay front"); front.style.transform = "translateZ(4.5px)"; front.innerHTML = `<img alt="${esc(o.alt || "")}" src="${url}">`; g3.append(front);
   const back = el("div", "lay back"); back.style.transform = "rotateY(180deg) translateZ(4.5px)"; back.innerHTML = `<img alt="" src="${url}">`; g3.append(back);
   const spec_ = el("div", "spec"); spec_.style.webkitMaskImage = spec_.style.maskImage = `url(${url})`; spec_.style.transform = "translateZ(5px)"; g3.append(spec_);
-  if (spec.turbo) { const A = assemble(spec.type); if (A.turbo) { const l = el("div", "lcd"); l.style.left = A.turbo[0] / VW * 100 + "%"; l.style.top = (A.turbo[1] / VH * 100 + 9) + "%"; l.style.transform = "translate(-50%,-50%) translateZ(6px)"; l.textContent = "TURBO · " + String(o.kills || 0).padStart(6, "0"); g3.append(l) } }
+  if (spec.turbo) { const A = assemble(spec.type); if (A.turbo) { const l = el("div", "lcd"); l.style.left = A.turbo[0] / VW * 100 + "%"; l.style.top = (A.turbo[1] / VH * 100) + "%"; l.style.transform = "translate(-50%,-50%) translateZ(6px)"; l.textContent = "TURBO · " + String(o.kills || 0).padStart(6, "0"); g3.append(l) } }
   let rx = 0, ry = 0, baseY = 0, drag = null, spinning = false, raf = 0;
   const apply = () => { g3.style.transform = `rotateX(${rx}deg) rotateY(${ry + baseY}deg)`; const a = ((ry + baseY) % 360 + 360) % 360; spec_.style.opacity = a > 90 && a < 270 ? 0 : 1 };
   wrap.addEventListener("pointermove", e => {
@@ -3169,7 +3169,7 @@ function inspectView(spec, o = {}) {
 }
 const inspectBtn = fn => { const b = el("button", "ghost sm", '<svg viewBox="0 0 24 24" class="ico"><path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5"/></svg>Осмотреть 360°'); b.onclick = fn; return b };
 function priceChartSVG(key, f, t, hours = 12, W = 600, H = 120) {
-  const now = Date.now(), N = 64, pts = []; const base = catItem(key).base * WEAR[tierOf(f)].m * (t ? TURBO_M : 1);
+  const now = Date.now(), N = 120, pts = []; const base = catItem(key).base * WEAR[tierOf(f)].m * (t ? TURBO_M : 1);
   for (let i = 0; i < N; i++) { const tt = now - (N - 1 - i) / (N - 1) * hours * 36e5; pts.push(base * market(key, tt)) }
   const mn = Math.min(...pts), mx = Math.max(...pts), pad = (mx - mn) * .15 || 1, lo = mn - pad, hi = mx + pad;
   const X = i => i / (N - 1) * (W - 8) + 4, Y = v => H - 18 - (v - lo) / (hi - lo) * (H - 30);
