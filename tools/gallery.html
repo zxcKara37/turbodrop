@@ -1,0 +1,13 @@
+<!doctype html><meta charset=utf8><style>body{background:#0e0c14;color:#ccc;font:11px sans-serif;margin:8px}.g{display:grid;grid-template-columns:repeat(var(--c,4),1fr);gap:6px}.g div{background:#1a1724;border-radius:6px;padding:4px}.g img{width:100%;display:block}</style>
+<div id=out class=g></div>
+<script src="../src/js/00-util.js"></script><script src="../src/js/10-geom.js"></script><script src="../src/js/20-patterns.js"></script><script src="../src/js/30-render.js"></script><script src="../src/js/40-parts.js"></script><script src="../src/js/41-weapons.js"></script><script src="../src/js/50-skins.js"></script>
+<script>
+const q=new URLSearchParams(location.search),mode=q.get('m')||'weapons',out=document.getElementById('out');
+function add(spec,label,sz){const d=document.createElement('div');const im=new Image();im.src=gunURL(spec,sz||'md');d.append(im,label);out.append(d)}
+const t0=performance.now();
+if(mode==='weapons'){const sk=SKINS[q.get('s')||'camo0'];const keys=(q.get('w')||WKEYS.join(',')).split(',');out.style.setProperty('--c',q.get('c')||3);keys.forEach(k=>{add({type:k,skin:null,tier:0},k+' base');add({type:k,skin:sk,tier:0},k+' '+sk.n);})}
+if(mode==='wear'){const sk=SKINS[q.get('s')||'tiger0'];out.style.setProperty('--c',5);(q.get('w')||'ak74,knife').split(',').forEach(k=>[0,1,2,3,4].forEach(t=>add({type:k,skin:sk,tier:t,turbo:t==0},k+' t'+t)))}
+if(mode==='skins'){out.style.setProperty('--c',6);const w=q.get('w')||'m16';SKIN_IDS.forEach(id=>add({type:w,skin:SKINS[id],tier:0},id+' '+SKINS[id].n,'sm'))}
+if(mode==='big'){out.style.setProperty('--c',1);(q.get('w')||'ak74').split(',').forEach(k=>add({type:k,skin:SKINS[q.get('s')||'tiger0'],tier:+(q.get('t')||0),turbo:true},k,'lg'))}
+document.title='done '+Math.round(performance.now()-t0);
+</script>

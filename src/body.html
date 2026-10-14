@@ -1,0 +1,184 @@
+<header class="top" id="top">
+  <div class="bar">
+    <button class="logo" id="logo" aria-label="ТурбоДроп — к кейсам"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M19 1 5 18h10l-3 13 15-19H17z" fill="currentColor"/></svg><b>Турбо<span>Дроп</span></b></button>
+    <div class="seg mode" id="modeSeg" role="group" aria-label="Режим денег">
+      <button data-m="norm">Обычный</button><button data-m="inf">∞ Бесконечный</button><button data-m="hard">Хардкор</button>
+    </div>
+    <div class="lvl" id="lvlBox" title="Опыт: открывай кейсы и играй"><span id="lvlTxt">Ур. 0</span><i><b id="lvlBar"></b></i></div>
+    <button class="bonus" id="bonusBtn">Бонус</button>
+    <div class="sound" id="soundBox">
+      <button class="iconbtn" id="sndBtn" aria-label="Звук" aria-pressed="true"><svg viewBox="0 0 24 24"><path id="sndIco" d="M4 9h4l5-4v14l-5-4H4zM16 8c1.5 1 2.4 2.4 2.4 4s-.9 3-2.4 4M18.5 5c2.3 1.7 3.5 4.1 3.5 7s-1.2 5.3-3.5 7"/></svg></button>
+      <input type="range" id="volRange" min="0" max="100" value="70" aria-label="Громкость">
+    </div>
+    <button class="balance" id="balBox" aria-label="Баланс"><small>Баланс</small><b id="bal">1 000 ₽</b></button>
+  </div>
+  <nav class="tabs" role="tablist" id="tabs">
+    <button role="tab" data-tab="cases">Кейсы</button>
+    <button role="tab" data-tab="battle">Батлы</button>
+    <button role="tab" data-tab="upgrade">Апгрейд</button>
+    <button role="tab" data-tab="contract">Контракты</button>
+    <button role="tab" data-tab="games">Игры</button>
+    <button role="tab" data-tab="market">Рынок</button>
+    <button role="tab" data-tab="inv">Инвентарь<span class="n" id="invCount">0</span></button>
+    <button role="tab" data-tab="profile">Профиль<span class="n dot" id="profDot" hidden>!</span></button>
+  </nav>
+  <div class="feed" id="feed" aria-label="Живая лента дропов"></div>
+</header>
+
+<main id="main">
+<!-- ================= КЕЙСЫ ================= -->
+<section id="tab-cases" class="view">
+  <div id="caseList">
+    <div id="featured"></div>
+    <div class="filters">
+      <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg><input type="search" id="caseQ" placeholder="Кейс или скин" aria-label="Поиск кейсов"></div>
+      <div class="chips" id="catChips" role="group" aria-label="Категория"></div>
+      <div class="row gap8 wrap">
+        <div class="seg" id="priceSeg" role="group" aria-label="Цена"><button data-p="all">Любая цена</button><button data-p="0-100">до 100 ₽</button><button data-p="100-500">100–500</button><button data-p="500-2000">500–2 000</button><button data-p="2000-1e9">от 2 000</button></div>
+        <div class="seg" id="sortSeg" role="group" aria-label="Сортировка"><button data-s="pop">Популярные</button><button data-s="new">Новые</button><button data-s="cheap">Дешевле</button><button data-s="exp">Дороже</button></div>
+        <button class="ghost sm" id="favOnly" aria-pressed="false"><svg viewBox="0 0 24 24" class="ico"><path d="M12 20s-7-4.4-9-9c-1.3-3 .6-6.5 4-6.5 2 0 3.6 1.2 5 3 1.4-1.8 3-3 5-3 3.4 0 5.3 3.5 4 6.5-2 4.6-9 9-9 9z"/></svg>Избранные</button>
+      </div>
+    </div>
+    <div class="cases" id="cases"></div>
+  </div>
+  <div id="caseView" hidden>
+    <button class="back" id="caseBack"><svg viewBox="0 0 24 24" class="ico"><path d="m15 5-7 7 7 7"/></svg>Все кейсы</button>
+    <div class="stage" id="stage">
+      <div class="stage-top">
+        <div class="crate" id="crate"><img class="cbody" id="cBody" alt=""><img class="clid" id="cLid" alt=""><div class="rays" id="cRays"></div></div>
+        <div class="cinfo">
+          <div class="eyebrow" id="cvCat"></div>
+          <h1 id="cvName"></h1>
+          <div class="cmeta" id="cvMeta"></div>
+          <div class="ctrl">
+            <div class="seg count" id="countSeg" role="group" aria-label="Сколько открыть"></div>
+            <button class="ghost sm" id="fastBtn" aria-pressed="false"><svg viewBox="0 0 24 24" class="ico"><path d="M13 3 4 14h7l-1 7 9-11h-7z"/></svg>Быстро</button>
+            <button class="ghost sm icon" id="favBtn" aria-pressed="false" aria-label="В избранное"><svg viewBox="0 0 24 24" class="ico"><path d="M12 20s-7-4.4-9-9c-1.3-3 .6-6.5 4-6.5 2 0 3.6 1.2 5 3 1.4-1.8 3-3 5-3 3.4 0 5.3 3.5 4 6.5-2 4.6-9 9-9 9z"/></svg></button>
+          </div>
+          <button class="btn big" id="openBtn">Открыть</button>
+          <div class="hint" id="openHint" hidden></div>
+        </div>
+      </div>
+      <div class="reels" id="reels"></div>
+    </div>
+    <h2 class="h2">Содержимое и шансы</h2>
+    <p class="sub" id="cvOdds"></p>
+    <div class="drops" id="drops"></div>
+  </div>
+</section>
+
+<!-- ================= БАТЛЫ ================= -->
+<section id="tab-battle" class="view" hidden>
+  <div class="head"><h2 class="h2">Кейс-батлы</h2><p class="sub">Все открывают одинаковые кейсы. Победитель забирает все выпавшие предметы.</p></div>
+  <div class="panel">
+    <div class="grid2">
+      <div class="field"><label>Формат</label><div class="seg" id="btFormat" role="group"><button data-f="1v1">1 на 1</button><button data-f="1v2">1 на 2</button><button data-f="1v3">1 на 3</button><button data-f="2v2">2 на 2</button></div></div>
+      <div class="field wide"><label>Режим</label><div class="seg" id="btMode" role="group"><button data-b="classic">Классика</button><button data-b="reverse">Наоборот</button><button data-b="boss">Босс-батл</button><button data-b="random">Случайные кейсы</button></div></div>
+      <div class="field"><label>Раунды</label><div class="seg" id="btRounds" role="group"><button data-r="1">1</button><button data-r="3">3</button><button data-r="5">5</button></div></div>
+      <div class="field"><label id="btCaseLbl">Кейс</label><button class="picker" id="btCaseBtn"></button></div>
+    </div>
+    <p class="rule" id="btRule"></p>
+    <div class="row gap8 wrap center"><button class="btn" id="btBtn">Начать батл</button><span class="hint" id="btHint" hidden></span></div>
+  </div>
+  <div class="arena" id="arena"></div>
+  <div class="stats" id="btStats"></div>
+</section>
+
+<!-- ================= АПГРЕЙД ================= -->
+<section id="tab-upgrade" class="view" hidden>
+  <div class="head"><h2 class="h2">Апгрейд</h2><p class="sub">Поставь до 6 предметов и выбери цель дороже. Шанс равен сумме ставки, делённой на цену цели, с комиссией 8%. Стрелка в цветной зоне — цель твоя, мимо — ставка сгорает.</p></div>
+  <div class="panel up">
+    <div class="slot" id="upFrom"></div>
+    <div class="wheelbox"><canvas id="upWheel" width="400" height="400" aria-label="Колесо апгрейда"></canvas><div class="wheel-c" id="upChance"></div></div>
+    <div class="slot" id="upTo"></div>
+  </div>
+  <div class="row gap8 wrap center">
+    <div class="seg" id="multSeg" role="group" aria-label="Множитель"><button data-m="1.5">×1,5</button><button data-m="2">×2</button><button data-m="3">×3</button><button data-m="5">×5</button><button data-m="10">×10</button><button data-m="20">×20</button></div>
+    <button class="btn" id="upBtn" disabled>Апгрейд</button>
+  </div>
+  <div class="grid-up">
+    <div><h3 class="h3">Твои предметы <span class="muted" id="upSelInfo"></span></h3><div class="vgrid" id="upInv"></div></div>
+    <div><h3 class="h3">Цель</h3><div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg><input type="search" id="upQ" placeholder="Найти цель" aria-label="Поиск цели"></div><div class="vgrid" id="upTgts"></div></div>
+  </div>
+  <h3 class="h3">История попыток</h3>
+  <div class="hist" id="upHist"></div>
+</section>
+
+<!-- ================= КОНТРАКТЫ ================= -->
+<section id="tab-contract" class="view" hidden>
+  <div class="head"><h2 class="h2">Контракты</h2><p class="sub">Отдай от 3 до 10 предметов — получишь один новый. Его цена считается от суммы вклада по таблице ниже, исход известен заранее.</p></div>
+  <div class="panel ct">
+    <div class="ct-sum" id="ctSum"></div>
+    <div class="ct-table" id="ctTable"></div>
+    <div class="slot" id="ctOut"></div>
+  </div>
+  <div class="row gap8 wrap center"><button class="ghost" id="ctAuto">10 самых дешёвых</button><button class="ghost" id="ctClear">Очистить</button><button class="btn" id="ctBtn" disabled>Подписать контракт</button></div>
+  <div class="vgrid" id="ctInv"></div>
+</section>
+
+<!-- ================= ИГРЫ ================= -->
+<section id="tab-games" class="view" hidden>
+  <div class="head"><h2 class="h2">Мини-игры</h2><p class="sub">Случайность — криптографический генератор браузера. Шансы и выплаты указаны в каждой игре.</p></div>
+  <div class="chips big" id="gameChips" role="tablist"><button data-g="coin">Монетка</button><button data-g="crash">Краш</button><button data-g="mines">Мины</button><button data-g="wheel">Колесо удачи</button></div>
+  <div class="panel game" id="game-coin"></div>
+  <div class="panel game" id="game-crash" hidden></div>
+  <div class="panel game" id="game-mines" hidden></div>
+  <div class="panel game" id="game-wheel" hidden></div>
+</section>
+
+<!-- ================= РЫНОК ================= -->
+<section id="tab-market" class="view" hidden>
+  <div class="head"><h2 class="h2">Рынок</h2><p class="sub">Цены плавно гуляют: у каждого скина свой цикл от минут до нескольких часов. Покупка дороже рынка на 10%, продажа — по рынку.</p></div>
+  <div class="chips" id="mkChips" role="group"><button data-v="movers">Движение цен</button><button data-v="mine">Мои предметы</button><button data-v="buy">Каталог</button></div>
+  <div class="filters" id="mkFilters">
+    <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg><input type="search" id="mkQ" placeholder="Название скина или оружия" aria-label="Поиск по рынку"></div>
+    <div class="seg" id="mkRar" role="group" aria-label="Редкость"></div>
+  </div>
+  <div class="mlist" id="mkList"></div>
+</section>
+
+<!-- ================= ИНВЕНТАРЬ ================= -->
+<section id="tab-inv" class="view" hidden>
+  <div class="hrowx"><h2 class="h2">Инвентарь</h2><div class="stats" id="invStats"></div></div>
+  <div class="filters">
+    <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg><input type="search" id="invQ" placeholder="Поиск в инвентаре" aria-label="Поиск в инвентаре"></div>
+    <div class="seg" id="invSort" role="group" aria-label="Сортировка"><button data-s="new">Новые</button><button data-s="exp">Дорогие</button><button data-s="cheap">Дешёвые</button><button data-s="rar">Редкость</button><button data-s="trend">Рост цены</button></div>
+    <div class="seg" id="invRar" role="group" aria-label="Редкость"></div>
+  </div>
+  <div class="row gap8 wrap" id="invActs">
+    <button class="ghost sm" id="selAll">Выбрать видимые</button>
+    <button class="btn sm" id="sellSel" disabled>Продать выбранные</button>
+    <button class="ghost sm" id="sellCheap">Продать дешевле 50 ₽</button>
+    <button class="ghost sm danger" id="sellAll">Продать всё</button>
+  </div>
+  <div class="vgrid tall" id="inv"></div>
+</section>
+
+<!-- ================= ПРОФИЛЬ ================= -->
+<section id="tab-profile" class="view" hidden>
+  <div class="pcard" id="pCard"></div>
+  <div class="grid2 pgrid">
+    <div class="panel"><h3 class="h3">Баланс</h3><div id="pChart" class="chart"></div></div>
+    <div class="panel"><h3 class="h3">Витрина</h3><div class="showcase" id="pShow"></div></div>
+  </div>
+  <div class="tiles" id="pTiles"></div>
+  <div class="grid2 pgrid">
+    <div class="panel"><h3 class="h3">Задания дня <span class="muted" id="qReset"></span></h3><div id="pQuests" class="quests"></div><div class="streak" id="pStreak"></div></div>
+    <div class="panel"><h3 class="h3">Таблица лидеров</h3><div id="pLeaders" class="leaders"></div></div>
+  </div>
+  <div class="panel"><h3 class="h3">Что выпадало</h3><div class="bars" id="pBars"></div></div>
+  <h2 class="h2">Достижения <span class="muted" id="achCount"></span></h2>
+  <div class="ach" id="pAch"></div>
+  <h2 class="h2">Сохранение</h2>
+  <div class="panel save">
+    <p class="sub" id="saveInfo"></p>
+    <div class="row gap8 wrap"><button class="ghost" id="exportBtn">Экспорт в строку</button><button class="ghost" id="importBtn">Импорт</button><button class="ghost danger" id="resetBtn">Сбросить режим</button></div>
+    <textarea id="saveText" rows="3" spellcheck="false" aria-label="Строка сохранения" placeholder="Сюда появится строка сохранения или вставь свою для импорта"></textarea>
+  </div>
+</section>
+</main>
+
+<div class="modal" id="modal" hidden><div class="mbox" id="mbox" role="dialog" aria-modal="true"></div></div>
+<div class="reveal" id="reveal" hidden><div class="rv-rays"></div><div class="rbox" id="rbox" role="dialog" aria-modal="true"></div></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<canvas id="fx" aria-hidden="true"></canvas>
