@@ -58,7 +58,7 @@ $("upBtn").onclick = async () => {
   if (win) {
     const n = makeInst(T, { f: +(.15 + R() * .2299).toFixed(5), t: false }); addInv(n, "Апгрейд"); S.st.upWins++; S.st.won += priceOf(n); if (tp / stake >= 10) S.st.upBig++;
     drawWheel(ch, upAng, "win"); $("upChance").className = "wheel-c win"; $("upChance").innerHTML = "<b>Успех!</b><small>" + fmtP(ch, 2) + "</small>";
-    SND.upWin(); feedAdd(n, ALL.nick, true); upSel.add(n.u); track("up", { win: true }); save(); await sleep(700); setBusy(false); reveal([n], null, null, false);
+    SND.upWin(); feedAdd(n, ALL.nick, true); upSel.add(n.u); track("up", { win: true }); save(); await sleep(700); reveal([n], null, null, false); setBusy(false);
   } else {
     drawWheel(ch, upAng, "lose"); $("upChance").className = "wheel-c lose"; $("upChance").innerHTML = "<b>Мимо</b><small>" + fmtP(ch, 2) + "</small>";
     SND.upLose(); toast(`Сгорело: ${items.length} ${plural(items.length, "предмет", "предмета", "предметов")} на ${fmt(stake)}`, "bad"); track("up", { win: false }); save(); await sleep(1400); setBusy(false);

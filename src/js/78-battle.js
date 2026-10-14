@@ -38,7 +38,8 @@ function previewPlayers() {
 function buildArena(teams) {
   const a = $("arena"); a.innerHTML = ""; a.classList.toggle("teams", teams.some(t => t.length > 1));
   const sides = [];
-  teams.forEach((team, ti) => { const tbox = el("div", "team"); team.forEach(p => { const d = el("div", "side" + (p === BOSS ? " boss" : "")); d.innerHTML = `<div class="who"><img alt="" src="${avatarURL(p.ava)}"><div><b>${esc(p.n)}</b><small>${esc(p.me ? (teams[ti].length > 1 ? "твоя команда" : "это ты") : p.t)}</small></div><span class="sum">0 ₽</span></div><div class="say">${esc(p.me ? "Удачи!" : p.say[0])}</div><div class="reel"><div class="needle"></div><div class="track"></div></div><div class="got"></div>`; tbox.append(d); sides.push({ p, d, team: ti, got: [] }) }); a.append(tbox) });
+  const multi = teams.some(t => t.length > 1);
+  teams.forEach((team, ti) => { const tbox = el("div", "team"); if (multi) tbox.insertAdjacentHTML("beforeend", `<div class="thead"><b>${ti === 0 ? "Твоя команда" : "Соперники"}</b><span class="tsum" data-t="${ti}">0 ₽</span></div>`); team.forEach(p => { const d = el("div", "side" + (p === BOSS ? " boss" : "")); d.innerHTML = `<div class="who"><img alt="" src="${avatarURL(p.ava)}"><div><b>${esc(p.n)}</b><small>${esc(p.me ? "это ты" : multi && ti === 0 ? "напарник · " + p.t : p.t)}</small></div><span class="sum">0 ₽</span></div><div class="say">${esc(p.me ? "Удачи!" : p.say[0])}</div><div class="reel"><div class="needle"></div><div class="track"></div></div><div class="got"></div>`; tbox.append(d); sides.push({ p, d, team: ti, got: [] }) }); a.append(tbox) });
   const cs = btCs(); a.querySelectorAll(".track").forEach(t => { for (let j = 0; j < 9; j++) t.append(cell(probe(rollCase(cs).e))) });
   return sides;
 }
@@ -54,7 +55,7 @@ $("btBtn").onclick = async () => {
     sides.forEach((s, i) => { const reel = s.d.querySelector(".reel"); const nr = buildReel(cs, res[i]); reel.replaceWith(nr) });
     await Promise.all(sides.map((s, i) => spinReel(s.d.querySelector(".reel"), RM() ? 0 : fast ? 900 : 3600 + i * 180, i === 0)));
     SND.stop();
-    sides.forEach((s, i) => { s.got.push(res[i]); s.d.querySelector(".got").append(cell(res[i])); s.d.querySelector(".sum").textContent = fmt(s.got.reduce((a, b) => a + priceOf(b), 0)); if (!s.p.me) { const say = s.p.say[FAIR.int(s.p.say.length)]; s.d.querySelector(".say").textContent = instR(res[i]) >= 4 ? "Ого! " + say : say } });
+    sides.forEach((s, i) => { s.got.push(res[i]); s.d.querySelector(".got").append(cell(res[i])); s.d.querySelector(".sum").textContent = fmt(s.got.reduce((a, b) => a + priceOf(b), 0)); const ts = $("arena").querySelector(`.tsum[data-t="${s.team}"]`); if (ts) ts.textContent = fmt(sides.filter(x => x.team === s.team).reduce((a, x) => a + x.got.reduce((q, w) => q + priceOf(w), 0), 0)); if (!s.p.me) { const say = s.p.say[FAIR.int(s.p.say.length)]; s.d.querySelector(".say").textContent = instR(res[i]) >= 4 ? "Ого! " + say : say } });
     if (r < plan.length - 1) await sleep(fast ? 200 : 600);
   }
   const teamSum = ti => sides.filter(s => s.team === ti).reduce((a, s) => a + s.got.reduce((x, y) => x + priceOf(y), 0), 0) * (btMode === "boss" && sides.find(s => s.team === ti).p === BOSS ? 1.25 : 1);
@@ -72,7 +73,8 @@ $("btBtn").onclick = async () => {
     if (btMode === "boss") earn(cost);
     S.inv.filter(i => i.t && S.show.includes(i.u)).forEach(i => i.kills += plan.length * 2);
   }
-  track("battle", { win }); save(); setBusy(false); refresh();
+  track("battle", { win }); save(); refresh();
   if (win) { await sleep(500); reveal(mine, null, null, fast); if (btMode === "boss") toast("Награда за босса: +" + fmt(cost), "good") }
   else { SND.upLose(); toast(`${sides.find(s => s.team === wt).p.n} ${btFormat === "2v2" ? "с напарником " : ""}забирает ${fmt(all.reduce((a, b) => a + priceOf(b), 0))}`, "bad") }
+  setBusy(false); refresh();
 };

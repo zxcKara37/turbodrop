@@ -1,7 +1,7 @@
 /* ================= Профиль ================= */
-function balanceChart() {
+function balanceChart(W = 600) {
   const h = S.balHist.slice(-80); if (h.length < 2) h.unshift([h[0][0] - 6e4, h[0][1]]);
-  const W = 600, H = 200, vals = h.map(x => x[1]), mn = Math.min(...vals), mx = Math.max(...vals), pad = (mx - mn) * .12 || 10, lo = mn >= 0 ? Math.max(0, mn - pad) : mn - pad, hi = mx + pad;
+  const H = 200, vals = h.map(x => x[1]), mn = Math.min(...vals), mx = Math.max(...vals), pad = (mx - mn) * .12 || 10, lo = mn >= 0 ? Math.max(0, mn - pad) : mn - pad, hi = mx + pad;
   const X = i => 44 + i / (h.length - 1) * (W - 52), Y = v => 12 + (1 - (v - lo) / (hi - lo)) * (H - 40);
   const d = h.map((p, i) => (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(p[1]).toFixed(1)).join("");
   let grid = ""; for (let k = 0; k <= 3; k++) { const v = lo + (hi - lo) * k / 3, y = Y(v); grid += `<line x1="44" x2="${W - 8}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="40" y="${y + 4}" fill="var(--muted)" font-size="11" text-anchor="end">${fmtN(v)}</text>` }
@@ -19,9 +19,9 @@ function renderProfile() {
   pc.append(av, mid, lv);
   $("nickIn").onchange = () => { ALL.nick = $("nickIn").value.trim().slice(0, 18) || "Игрок"; save(); toast("Ник сохранён", "good") };
   $("avaBtn").onclick = av.onclick;
-  $("pChart").innerHTML = balanceChart();
+  $("pChart").innerHTML = balanceChart(Math.max(280, Math.min(900, $("pChart").clientWidth || 600)));
   const sh = $("pShow"); sh.innerHTML = "";
-  for (let i = 0; i < 3; i++) { const u = S.show[i], it = u && S.inv.find(x => x.u === u); if (it) sh.append(icard(it, { click: () => openItem(it) })); else sh.append(el("div", "slotx", "Пустой слот. Открой предмет в инвентаре и нажми «В витрину»")) }
+  for (let i = 0; i < 3; i++) { const u = S.show[i], it = u && S.inv.find(x => x.u === u); if (it) sh.append(icard(it, { shine: true, click: () => openItem(it) })); else sh.append(el("div", "slotx", "Пустой слот. Открой предмет в инвентаре и нажми «В витрину»")) }
   const tiles = [["Кейсов открыто", fmtN(st.opened)], ["Потрачено", fmt(st.spent)], ["Выбито", fmt(st.won)], ["Итог", `<span style="color:${net >= 0 ? "var(--good)" : "var(--bad)"}">${net >= 0 ? "+" : "−"}${fmt(Math.abs(net))}</span>`], ["Инвентарь", fmt(invValue())], ["Лучший дроп", st.best ? `${fmt(st.best.p)}<small style="margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(st.best.n)}</small>` : "—"], ["Батлы", `${st.bWins} из ${st.bTotal}`], ["Апгрейды", `${st.upWins} из ${st.upTries}`], ["Контракты", fmtN(st.ctTotal)], ["Мини-игры", fmtN(st.games)], ["TURBO", fmtN(st.turbo)], ["Серия входов", `${S.streak.n} ${plural(S.streak.n, "день", "дня", "дней")}`]];
   $("pTiles").innerHTML = tiles.map(([k, v]) => `<div class="tile"><small>${k}</small><b>${v}</b></div>`).join("");
   const qs = questsToday(); $("qReset").textContent = "· обновятся через " + hms((dayNo() + 1) * DAY - 3 * 3600e3 - Date.now());

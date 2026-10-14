@@ -1,0 +1,24 @@
+// Батлы и мини-игры
+import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
+const out = process.argv[2], W=+(process.argv[3]||1280), H=+(process.argv[4]||860), tag=process.argv[5]||'pc';
+const b = await chromium.launch(); const ctx = await b.newContext({viewport:{width:W,height:H},deviceScaleFactor:1,hasTouch:tag==='ph'}); const p = await ctx.newPage(); const errs=[];
+p.on('console', m => { if (['error','warning'].includes(m.type())) errs.push(m.type()+': '+m.text()) }); p.on('pageerror', e => errs.push('PAGEERROR: '+e.message));
+const settle = async () => { await p.waitForFunction(()=>!busy,null,{timeout:30000}); await p.waitForTimeout(700); await p.evaluate(()=>closeReveal()); await p.waitForTimeout(150) };
+await p.goto('file://'+process.cwd()+'/dist/test.html'); await p.waitForTimeout(800);
+await p.evaluate(()=>{ S.bal=60000; S.xp=xpFor(12)+10; S.lvl=12; ALL.fast=true; save(); go('battle'); });
+await p.waitForTimeout(500);
+await p.click('#btFormat [data-f="2v2"]'); await p.click('#btRounds [data-r="3"]'); await p.waitForTimeout(200);
+await p.screenshot({path:`${out}/${tag}-bt-setup.png`});
+await p.click('#btBtn'); await p.waitForTimeout(1600); await p.screenshot({path:`${out}/${tag}-bt-mid.png`});
+await settle(); await p.screenshot({path:`${out}/${tag}-bt-end.png`, fullPage:true});
+await p.click('#btMode [data-b="boss"]'); await p.click('#btBtn'); await settle(); await p.screenshot({path:`${out}/${tag}-bt-boss.png`});
+await p.click('#btMode [data-b="random"]'); await p.waitForTimeout(200); await p.screenshot({path:`${out}/${tag}-bt-random.png`});
+await p.evaluate(()=>go('games')); await p.waitForTimeout(300);
+await p.click('#coinBtn'); await p.waitForTimeout(800); await p.screenshot({path:`${out}/${tag}-g-coin.png`}); await p.waitForTimeout(1200);
+await p.click('#gameChips [data-g="crash"]'); await p.waitForTimeout(200); await p.fill('#crashAuto','50'); await p.click('#crashBtn'); await p.waitForTimeout(2500); await p.screenshot({path:`${out}/${tag}-g-crash.png`});
+await p.evaluate(()=>{ if(crash&&crash.run) crashCash() }); await p.waitForTimeout(300);
+await p.click('#gameChips [data-g="mines"]'); await p.waitForTimeout(200); await p.click('#minesBtn'); for (const i of [0,6,12]) { if (await p.evaluate(()=>mines&&mines.run)) await p.click(`#minesGrid button[data-i="${i}"]`); await p.waitForTimeout(150) } await p.screenshot({path:`${out}/${tag}-g-mines.png`});
+await p.evaluate(()=>{ if(mines&&mines.run) minesCash() });
+await p.click('#gameChips [data-g="wheel"]'); await p.waitForTimeout(200); await p.click('#wheelBtn'); await p.waitForTimeout(2500); await p.screenshot({path:`${out}/${tag}-g-wheel.png`}); await p.waitForTimeout(3500);
+console.log(await p.evaluate(()=>`bal=${S.bal} inv=${S.inv.length} bTotal=${S.st.bTotal} bWins=${S.st.bWins} games=${S.st.games} busy=${busy}`));
+console.log(errs.join('\n')||'OK'); await b.close();

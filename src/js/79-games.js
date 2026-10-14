@@ -142,7 +142,7 @@ function wheelState() {
 }
 function wheelDraw(ang) {
   const cv = $("wheelCv"); if (!cv) return; const g = cv.getContext("2d"), m = 300, R_ = 290; g.clearRect(0, 0, 600, 600); let a = -Math.PI / 2 + ang;
-  for (const [n, , p, c] of WHEEL) { const da = p * 6.283; g.beginPath(); g.moveTo(m, m); g.arc(m, m, R_, a, a + da); g.closePath(); g.fillStyle = c; g.fill(); g.strokeStyle = "#0a090f"; g.lineWidth = 3; g.stroke(); g.save(); g.translate(m, m); g.rotate(a + da / 2); g.fillStyle = "#fff"; g.font = `800 ${da > .5 ? 22 : 15}px 'Golos Text',sans-serif`; g.textAlign = "right"; g.textBaseline = "middle"; g.fillText(n, R_ - 18, 0); g.restore(); a += da }
+  for (const [n, , p, c] of WHEEL) { const da = p * 6.283; g.beginPath(); g.moveTo(m, m); g.arc(m, m, R_, a, a + da); g.closePath(); g.fillStyle = c; g.fill(); g.strokeStyle = "#0a090f"; g.lineWidth = 3; g.stroke(); g.save(); g.translate(m, m); g.rotate(a + da / 2); g.fillStyle = "#fff"; g.font = `800 ${da > .5 ? 22 : 15}px 'Golos Text',sans-serif`; g.textAlign = "right"; g.textBaseline = "middle"; if (da > .3) g.fillText(n, R_ - 18, 0); else { g.font = "800 18px 'Golos Text',sans-serif"; g.fillText("★", R_ - 16, 0) } g.restore(); a += da }
   g.beginPath(); g.arc(m, m, 46, 0, 7); g.fillStyle = "#14121c"; g.fill(); g.strokeStyle = "#ffb21f"; g.lineWidth = 4; g.stroke();
 }
 async function wheelSpin() {

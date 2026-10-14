@@ -1,5 +1,8 @@
 /* ================= Утилиты ================= */
 "use strict";
+/*WORKER-START*/
+const IN_WORKER = typeof document === "undefined";
+const mkCanvas = (w, h) => { if (IN_WORKER) return new OffscreenCanvas(w, h); const c = document.createElement("canvas"); c.width = w; c.height = h; return c };
 const $ = id => document.getElementById(id);
 const clamp = (x, a, b) => x < a ? a : x > b ? b : x;
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -9,7 +12,7 @@ function hseed(s) { let h = 2166136261; for (const ch of String(s)) h = Math.imu
 // Честный генератор для игровых бросков: криптостойкий, равномерный
 const FAIR = (() => {
   const buf = new Uint32Array(64); let i = 64;
-  const ok = !!(window.crypto && crypto.getRandomValues);
+  const ok = !!(globalThis.crypto && crypto.getRandomValues);
   return {
     u32() { if (!ok) return Math.floor(Math.random() * 4294967296); if (i >= 64) { crypto.getRandomValues(buf); i = 0 } return buf[i++] },
     // равномерное число [0,1) с 53 битами

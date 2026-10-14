@@ -168,9 +168,9 @@ $("openBtn").onclick = async () => {
   got.forEach(g => feedAdd(g, ALL.nick, true));
   const top = Math.max(...got.map(instR));
   track("open", { n, cat: cs.cat }); got.forEach(g => track("drop", { r: instR(g) }));
-  save(); setBusy(false); refresh();
+  save(); refresh();
   await sleep(fast ? 150 : 450);
-  reveal(got, cs, res, fast);
+  reveal(got, cs, res, fast); setBusy(false); refresh();
   setTimeout(() => { if (cur === cs) { $("crate").className = "crate idle" } }, 300);
 };
 // TURBO-счётчик: предметы TURBO «воюют», пока ты играешь
@@ -190,7 +190,7 @@ function reveal(got, cs, res, fast) {
     const mults = res ? res.filter(r => r.m > 1) : [];
     box.insertAdjacentHTML("beforeend", `<div class="eyebrow">${cs ? esc(cs.n) + " · " : ""}${got.length} ${plural(got.length, "предмет", "предмета", "предметов")}</div>${mults.length ? `<div class="mtag">Множитель ${mults.map(r => "×" + r.m).join(", ")}!</div>` : ""}<div class="pp">${fmt(sum)}</div>`);
     if (paid) box.insertAdjacentHTML("beforeend", `<div class="rsum"><span>Потрачено <b>${fmt(paid)}</b></span><span>Итог <b style="color:${sum >= paid ? "var(--good)" : "var(--bad)"}">${sum >= paid ? "+" : "−"}${fmt(Math.abs(sum - paid))}</b></span><span>Лучший <b style="color:${rcolor(br)}">${esc(instName(best))}</b></span></div>`);
-    const g = el("div", "rgrid"); sorted.forEach((o, i) => { const c = icard(o, { click: () => { closeReveal(); openItem(o) } }); c.style.animationDelay = i * .06 + "s"; g.append(c) }); box.append(g);
+    const g = el("div", "rgrid"); sorted.forEach((o, i) => { const c = icard(o, { shine: true, click: () => { closeReveal(); openItem(o) } }); c.style.animationDelay = i * .06 + "s"; g.append(c) }); box.append(g);
   }
   const ct = el("div", "ctrl"); ct.style.justifyContent = "center";
   const mk = (t, cls, f) => { const b = el("button", cls); b.textContent = t; b.onclick = () => { ct.querySelectorAll("button").forEach(x => x.disabled = true); f() }; ct.append(b); return b };

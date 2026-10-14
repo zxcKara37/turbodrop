@@ -35,7 +35,7 @@ function priceChartSVG(key, f, t, hours = 12, W = 600, H = 120) {
   const mn = Math.min(...pts), mx = Math.max(...pts), pad = (mx - mn) * .15 || 1, lo = mn - pad, hi = mx + pad;
   const X = i => i / (N - 1) * (W - 8) + 4, Y = v => H - 18 - (v - lo) / (hi - lo) * (H - 30);
   const d = pts.map((v, i) => (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(v).toFixed(1)).join(""), up = pts[N - 1] >= pts[0], c = up ? "var(--good)" : "var(--bad)";
-  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:${H}px" role="img" aria-label="График цены за ${hours} ч"><line x1="4" x2="${W - 4}" y1="${Y(base)}" y2="${Y(base)}" stroke="var(--line2)" stroke-dasharray="4 4"/><path d="${d}L${X(N - 1)} ${H - 18}L4 ${H - 18}Z" fill="${c}" opacity=".12"/><path d="${d}" fill="none" stroke="${c}" stroke-width="2" vector-effect="non-scaling-stroke"/><circle cx="${X(N - 1)}" cy="${Y(pts[N - 1])}" r="4" fill="${c}"/><text x="4" y="${H - 4}" fill="var(--muted)" font-size="11">−${hours} ч</text><text x="${W - 4}" y="${H - 4}" fill="var(--muted)" font-size="11" text-anchor="end">сейчас · ${fmt(pts[N - 1])}</text><text x="${W - 4}" y="12" fill="var(--muted)" font-size="11" text-anchor="end">макс ${fmt(mx)}</text></svg>`;
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto" role="img" aria-label="График цены за ${hours} ч"><line x1="4" x2="${W - 4}" y1="${Y(base)}" y2="${Y(base)}" stroke="var(--line2)" stroke-dasharray="4 4"/><path d="${d}L${X(N - 1)} ${H - 18}L4 ${H - 18}Z" fill="${c}" opacity=".12"/><path d="${d}" fill="none" stroke="${c}" stroke-width="2" vector-effect="non-scaling-stroke"/><circle cx="${X(N - 1)}" cy="${Y(pts[N - 1])}" r="4" fill="${c}"/><text x="4" y="${H - 4}" fill="var(--muted)" font-size="11">−${hours} ч</text><text x="${W - 4}" y="${H - 4}" fill="var(--muted)" font-size="11" text-anchor="end">сейчас · ${fmt(pts[N - 1])}</text><text x="${W - 4}" y="12" fill="var(--muted)" font-size="11" text-anchor="end">макс ${fmt(mx)}</text></svg>`;
 }
 // Карточка предмета из инвентаря
 function openItem(inst) {
@@ -50,7 +50,7 @@ function openItem(inst) {
     const row = el("div", "row gap8 wrap"); row.append(inspectBtn(iv.spin)); m.append(row);
     m.insertAdjacentHTML("beforeend", `<div class="fl" title="Износ"><i style="left:calc(${(inst.f * 100).toFixed(2)}% - 1px)"></i></div>
     <div class="mgrid"><dl class="kv"><dt>Износ</dt><dd>${WEAR[tier].n} · ${inst.f.toFixed(5)}</dd><dt>Класс</dt><dd>${WCLS[it.cls]}</dd><dt>Текстура</dt><dd>${esc(it.skin.pn)}</dd><dt>Получен</dt><dd>${esc(inst.src || "—")}</dd>${inst.t ? `<dt>Убийств</dt><dd>${fmtN(inst.kills)}</dd>` : ""}<dt>Цена</dt><dd><b style="color:var(--accent)">${fmt(p)}</b> ${trendHTML(tr)} <span class="muted">за час</span></dd></dl>
-    <div>${priceChartSVG(inst.k, inst.f, inst.t)}</div></div>`);
+    <div>${priceChartSVG(inst.k, inst.f, inst.t, 12, Math.max(280, Math.min(560, innerWidth - 80)))}</div></div>`);
     const ct = el("div", "row gap8 wrap");
     const b1 = el("button", "btn", "Продать за " + fmt(p)); b1.dataset.focus = 1; b1.onclick = () => { sell([inst]); closeModal() };
     const b2 = el("button", "ghost", "В апгрейд"); b2.onclick = () => { closeModal(); upSel.clear(); upSel.add(inst.u); upTgt = null; go("upgrade") };

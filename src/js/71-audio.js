@@ -2,6 +2,7 @@
 const SND = (() => {
   let ac = null, master = null, noiseBuf = null;
   function ctx() {
+    if (!ac && navigator.userActivation && !navigator.userActivation.hasBeenActive) return null; // до первого касания звук не создаём
     if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); master = ac.createGain(); master.connect(ac.destination); const n = ac.sampleRate; noiseBuf = ac.createBuffer(1, n, n); const d = noiseBuf.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1 } catch (e) { ac = null } }
     if (ac && ac.state === "suspended") ac.resume().catch(() => { });
     if (master) master.gain.value = ALL.snd.on ? ALL.snd.vol * .9 : 0;

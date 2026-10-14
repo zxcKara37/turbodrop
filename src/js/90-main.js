@@ -43,6 +43,10 @@ function refresh() {
   else if (curTab === "inv") renderInv();
   else if (curTab === "profile") renderProfile();
 }
+// На телефоне режим, уровень, бонус и звук уезжают из липкой шапки в строку под ней
+const PHONE = matchMedia("(max-width:640px)");
+function placeBar() { const bar = document.querySelector(".bar"), sb = $("subbar"), ids = ["modeSeg", "lvlBox", "bonusBtn", "soundBox"]; if (PHONE.matches) ids.forEach(id => sb.append($(id))); else { const bal = $("balBox"); ids.forEach(id => bar.insertBefore($(id), bal)) } }
+PHONE.addEventListener ? PHONE.addEventListener("change", placeBar) : PHONE.addListener(placeBar); placeBar();
 /* ---------- Запуск ---------- */
 (function boot() {
   const L = loadAll(); ALL = L.A; LOADED_FROM = L.from; S = ALL.modes[ALL.mode];

@@ -67,7 +67,7 @@ function fillMaterial(g, part, fr, mat, rnd, S) {
 const NOISE = {};
 function noisePat(g, kind) {
   if (!NOISE[kind]) {
-    const c = document.createElement("canvas"); c.width = c.height = 96; const x = c.getContext("2d"), r = rng(hseed(kind));
+    const c = mkCanvas(96, 96); const x = c.getContext("2d"), r = rng(hseed(kind));
     const n = kind === "grain" ? 900 : kind === "stipple" ? 1600 : 1100;
     for (let i = 0; i < n; i++) {
       const px = r() * 96, py = r() * 96;
@@ -77,14 +77,13 @@ function noisePat(g, kind) {
     }
     NOISE[kind] = c;
   }
-  const p = g.createPattern(NOISE[kind], "repeat"); p.setTransform(new DOMMatrix().scale(.35)); return p;
+  const p = g.createPattern(NOISE[kind], "repeat"); if (p.setTransform && typeof DOMMatrix !== "undefined") p.setTransform(new DOMMatrix().scale(.35)); return p;
 }
 /* ---------- Текстуры скинов: кэш с ограничением ---------- */
 const TEXC = new Map();
 function skinTex(skin, TS) {
   const k = skin.id + "@" + TS; if (TEXC.has(k)) { const v = TEXC.get(k); TEXC.delete(k); TEXC.set(k, v); return v }
-  const cv = document.createElement("canvas"); const px = PAT_PIXEL.has(skin.pat);
-  cv.width = px ? TW : TW * TS; cv.height = px ? TH : TH * TS; const g = cv.getContext("2d"); if (!px) g.scale(TS, TS);
+  const px = PAT_PIXEL.has(skin.pat), cv = mkCanvas(px ? TW : TW * TS, px ? TH : TH * TS); const g = cv.getContext("2d"); if (!px) g.scale(TS, TS);
   PAT[skin.pat](g, TW, TH, skin.c, rng(hseed(skin.id)));
   TEXC.set(k, cv); if (TEXC.size > 48) TEXC.delete(TEXC.keys().next().value);
   return cv;
@@ -151,11 +150,11 @@ function assemble(typeKey) {
 
 /* ---------- Главный рендер ---------- */
 let SCR = null, AMB = null;
-function scratch(w, h) { if (!SCR) SCR = document.createElement("canvas"); if (SCR.width !== w || SCR.height !== h) { SCR.width = w; SCR.height = h } const g = SCR.getContext("2d"); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, w, h); return [SCR, g] }
+function scratch(w, h) { if (!SCR) SCR = mkCanvas(w, h); if (SCR.width !== w || SCR.height !== h) { SCR.width = w; SCR.height = h } const g = SCR.getContext("2d"); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, w, h); return [SCR, g] }
 // spec: {type, skin:{id,pat,c,metal}, tier, turbo}
 function renderGun(spec, S) {
   const A = assemble(spec.type), W = Math.round(VW * S), H = Math.round(VH * S);
-  const cv = document.createElement("canvas"); cv.width = W; cv.height = H; const g = cv.getContext("2d"); g.scale(S, S);
+  const cv = mkCanvas(W, H); const g = cv.getContext("2d"); g.scale(S, S);
   const skin = spec.skin, tier = spec.tier ?? 0, wf = [0, .1, .3, .55, .95][tier];
   const rnd = rng(hseed(spec.type + "|" + (skin ? skin.id : "-") + "|" + tier));
   const tex = skin ? skinTex(skin, S > 2.5 ? 3 : 2) : null;
@@ -214,21 +213,48 @@ function renderGun(spec, S) {
   return cv;
 }
 
-/* ---------- Кэш готовых картинок (data URI) и очередь отрисовки ---------- */
+/* ---------- Кэш готовых картинок и очередь отрисовки ---------- */
 const IMGC = new Map();
 const BLANK = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
-function gunKey(spec, sz) { return spec.type + "|" + (spec.skin ? spec.skin.id : "-") + "|" + (spec.tier ?? 0) + "|" + (spec.turbo ? 1 : 0) + "|" + sz }
+const skinRef = s => s ? s.id : "-";
+function gunKey(spec, sz) { return spec.type + "|" + skinRef(spec.skin) + "|" + (spec.tier ?? 0) + "|" + (spec.turbo ? 1 : 0) + "|" + sz }
 const SIZES = { sm: 1.6, md: 2.4, lg: 5 };
+// Синхронная отрисовка (крупный осмотр, показ дропа)
 function gunURL(spec, sz = "sm") { const k = gunKey(spec, sz); let u = IMGC.get(k); if (!u) { u = renderGun(spec, SIZES[sz]).toDataURL("image/webp", .9); IMGC.set(k, u) } return u }
-const GQ = []; let gqOn = false;
-function gunImg(im, spec, sz = "sm") { const k = gunKey(spec, sz); im.dataset.k = k; const u = IMGC.get(k); if (u) { im.src = u; return im } im.src = BLANK; GQ.push([im, spec, sz, 0]); if (!gqOn) { gqOn = true; setTimeout(runGQ, 0) } return im }
-// Видимые картинки рисуются первыми; скрытые (display:none) ждут, вынутые из DOM отбрасываются
-const visible = im => im.isConnected && im.getClientRects().length > 0;
-function runGQ() {
-  const t0 = performance.now(), later = [], now = [];
-  for (const e of GQ) (visible(e[0]) ? now : later).push(e);
-  GQ.length = 0;
-  while (now.length && performance.now() - t0 < 12) { const e = now.shift(), [im, spec, sz] = e; if (im.dataset.k === gunKey(spec, sz)) im.src = gunURL(spec, sz) }
-  GQ.push(...now, ...later.filter(e => e[0].dataset.k === gunKey(e[1], e[2]) && (e[0].isConnected ? ++e[3] < 400 : ++e[3] < 40)));
-  if (GQ.length) setTimeout(runGQ, now.length ? 0 : 40); else gqOn = false;
+/*WORKER-END*/
+// Карточки рисуются в фоне: в Web Worker на OffscreenCanvas, чтобы прокрутка и анимации не тормозили.
+// Если воркер недоступен — рисуем частями на основном потоке.
+const GQ = []; let gqOn = false, RW = null, rwReady = false, rwBusy = 0; const RW_WAIT = new Map();
+function initWorker(src) {
+  try {
+    const url = URL.createObjectURL(new Blob([src + "\n;self.postMessage({ready: typeof OffscreenCanvas !== 'undefined' && !!new OffscreenCanvas(4,4).getContext('2d')});"], { type: "text/javascript" }));
+    RW = new Worker(url);
+    RW.onmessage = e => {
+      const d = e.data; if ("ready" in d) { rwReady = !!d.ready; if (!rwReady) { RW.terminate(); RW = null } kickGQ(); return }
+      rwBusy--; const ims = RW_WAIT.get(d.k) || []; RW_WAIT.delete(d.k);
+      if (d.blob) { const u = URL.createObjectURL(d.blob); IMGC.set(d.k, u); ims.forEach(im => { if (im.dataset.k === d.k) im.src = u }) }
+      kickGQ();
+    };
+    RW.onerror = () => { RW = null; rwReady = false; kickGQ() };
+  } catch (e) { RW = null }
 }
+function gunImg(im, spec, sz = "sm") { const k = gunKey(spec, sz); im.dataset.k = k; const u = IMGC.get(k); if (u) { im.src = u; return im } im.src = BLANK; GQ.push([im, spec, sz, 0]); kickGQ(); return im }
+function kickGQ() { if (!gqOn && GQ.length) { gqOn = true; setTimeout(runGQ, 0) } }
+// Сначала картинки в окне просмотра, потом остальные отрисованные; скрытые (display:none) ждут, вынутые из DOM отбрасываются
+const visible = im => im.isConnected && im.getClientRects().length > 0;
+const inView = im => { const r = im.getBoundingClientRect(); return r.bottom > -80 && r.top < innerHeight + 80 };
+function runGQ() {
+  gqOn = false; const t0 = performance.now(), later = [], vis = [];
+  for (const e of GQ) { const [im, spec, sz] = e; if (im.dataset.k !== gunKey(spec, sz)) continue; const u = IMGC.get(im.dataset.k); if (u) { im.src = u; continue } (visible(im) ? vis : later).push(e) }
+  GQ.length = 0;
+  const now = vis.filter(e => inView(e[0])), off = vis.filter(e => !inView(e[0]));
+  for (const q of [now, off]) while (q.length) {
+    const e = q[0], [im, spec, sz] = e, k = im.dataset.k;
+    if (RW && rwReady) { if (RW_WAIT.has(k)) { RW_WAIT.get(k).push(im); q.shift(); continue } if (rwBusy >= 3) break; RW_WAIT.set(k, [im]); rwBusy++; RW.postMessage({ k, type: spec.type, skin: skinRef(spec.skin), tier: spec.tier ?? 0, turbo: !!spec.turbo, S: SIZES[sz] }); q.shift(); continue }
+    if (RW && !rwReady) break; // воркер ещё загружается
+    if (performance.now() - t0 > 9) break; q.shift(); im.src = gunURL(spec, sz);
+  }
+  GQ.push(...now, ...off, ...later.filter(e => e[0].isConnected ? ++e[3] < 400 : ++e[3] < 40));
+  if (GQ.length) { gqOn = true; setTimeout(runGQ, (RW && rwReady) ? (rwBusy >= 3 ? 30 : 8) : now.length || off.length ? 4 : 40) }
+}
+/*WORKER-START*/

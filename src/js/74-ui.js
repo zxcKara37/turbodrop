@@ -54,7 +54,7 @@ const rcolor = r => RAR[r].h;
 function trendHTML(tr) { if (Math.abs(tr) < .001) return ""; const up = tr > 0; return `<span class="trend ${up ? "up" : "dn"}">${up ? "▲" : "▼"}${Math.abs(tr * 100).toFixed(1).replace(".", ",")}%</span>` }
 // Карточка предмета
 function icard(inst, o = {}) {
-  const r = instR(inst), d = el("div", "icard r" + r); d.style.setProperty("--rc", rcolor(r)); if (r >= 6) d.classList.add("shine");
+  const r = instR(inst), d = el("div", "icard r" + r); d.style.setProperty("--rc", rcolor(r)); if (r >= 6 && o.shine) d.classList.add("shine");
   d.append(itemImg(inst));
   const p = o.price ?? priceOf(inst);
   if (inst.kind === "case") d.insertAdjacentHTML("beforeend", `<span class="a">Кейс</span><span class="b">${esc(CASE_BY[inst.cid].n)}</span><span class="w">не открыт</span><span class="p">${fmt(p)}</span>`);
@@ -76,26 +76,27 @@ function cell(inst, extra) {
 }
 const probe = e => e.cid ? { kind: "case", cid: e.cid } : { k: e.key, f: .25, t: false };
 
-// ---------- Виртуальная сетка: рендерит только видимые ряды ----------
+// ---------- Виртуальная сетка: в DOM только видимые ряды, ряды переиспользуются при прокрутке ----------
 class VGrid {
-  constructor(box, o) { this.box = box; this.o = Object.assign({ minW: 160, rowH: 196, gap: 8, max: 0 }, o); this.items = []; this.start = -1; this.inner = el("div", "vin"); box.innerHTML = ""; box.append(this.inner); this.cols = 1; VGrid.all.add(this); new ResizeObserver(() => this.layout(true)).observe(box) }
-  set(items) { this.items = items; this.layout(true) }
-  layout(force) {
-    const W = this.box.clientWidth || 300, g = this.o.gap; this.cols = Math.max(1, Math.floor((W + g) / (this.o.minW + g)));
-    const rows = Math.ceil(this.items.length / this.cols), H = rows * (this.o.rowH + g); this.box.style.height = (this.items.length ? H : 0) + "px";
-    this.inner.style.gridTemplateColumns = `repeat(${this.cols},minmax(0,1fr))`; this.inner.style.gridAutoRows = this.o.rowH + "px";
-    if (!this.items.length) { this.inner.innerHTML = ""; this.inner.style.top = "0px"; if (this.o.empty) { this.box.style.height = "auto"; this.inner.style.position = "static"; this.inner.style.display = "block"; this.inner.innerHTML = this.o.empty() } this.start = -1; return }
-    this.inner.style.position = ""; this.inner.style.display = "";
-    this.scroll(force);
+  constructor(box, o) { this.box = box; this.o = Object.assign({ minW: 160, rowH: 196, gap: 8 }, o); this.items = []; this.rows = new Map(); this.inner = el("div", "vin"); box.innerHTML = ""; box.append(this.inner); this.cols = 1; this.w = 0; VGrid.all.add(this); new ResizeObserver(() => { if (this.box.clientWidth !== this.w) this.layout() }).observe(box) }
+  set(items) { this.items = items; this.layout() }
+  layout() {
+    const W = this.w = this.box.clientWidth || 300, g = this.o.gap; this.cols = Math.max(1, Math.floor((W + g) / (this.o.minW + g)));
+    this.rows.forEach(r => r.remove()); this.rows.clear(); this.inner.innerHTML = "";
+    if (!this.items.length) { this.box.style.height = "auto"; this.inner.style.position = "static"; if (this.o.empty) this.inner.innerHTML = this.o.empty(); return }
+    this.inner.style.position = ""; const rows = Math.ceil(this.items.length / this.cols); this.box.style.height = rows * (this.o.rowH + g) - g + "px"; this.inner.style.height = "100%";
+    this.scroll();
   }
-  scroll(force) {
-    if (!this.box.isConnected || this.box.offsetParent === null) return;
-    const rect = this.box.getBoundingClientRect(), rh = this.o.rowH + this.o.gap, vh = innerHeight;
-    const first = Math.max(0, Math.floor(-rect.top / rh) - 2), last = Math.min(Math.ceil(this.items.length / this.cols), Math.ceil((vh - rect.top) / rh) + 2);
-    if (!force && first === this.start && last === this.end) return; this.start = first; this.end = last;
-    const frag = document.createDocumentFragment();
-    for (let i = first * this.cols; i < Math.min(this.items.length, last * this.cols); i++) frag.append(this.o.render(this.items[i], i));
-    this.inner.innerHTML = ""; this.inner.append(frag); this.inner.style.top = first * rh + "px";
+  scroll() {
+    if (!this.items.length || !this.box.isConnected || !this.box.getClientRects().length) return;
+    const rect = this.box.getBoundingClientRect(), rh = this.o.rowH + this.o.gap, nRows = Math.ceil(this.items.length / this.cols);
+    const first = Math.max(0, Math.floor(-rect.top / rh) - 2), last = Math.min(nRows - 1, Math.ceil((innerHeight - rect.top) / rh) + 2);
+    for (const [k, r] of this.rows) if (k < first || k > last) { r.remove(); this.rows.delete(k) }
+    for (let k = first; k <= last; k++) {
+      if (this.rows.has(k)) continue; const r = el("div", "vrow"); r.style.cssText = `top:${k * rh}px;height:${this.o.rowH}px;grid-template-columns:repeat(${this.cols},minmax(0,1fr));gap:${this.o.gap}px`;
+      for (let i = k * this.cols; i < Math.min(this.items.length, (k + 1) * this.cols); i++) r.append(this.o.render(this.items[i], i));
+      this.inner.append(r); this.rows.set(k, r);
+    }
   }
 }
 VGrid.all = new Set();
